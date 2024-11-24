@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Top Spotify Songs</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+    <h1>Top Spotify Songs</h1>
+    <h2>Welcome! Here you can find data on a range of over 100K songs in over 125 different genres.</h2>
+
+    <form id='pie-chart-form' method="POST">
+        <label for="dropdown">Select a Pie Chart:</label>
+        <select name="dropdown" id="dropdown">
+            <option value="Ratio of Explicit Songs" {% if selected_image=='Ratio of Explicit Songs.png' %}selected{%
+                endif %}>Ratio of Explicit Songs</option>
+            <option value="Ratio of Major/Minor Songs" {% if selected_image=='Ratio of Major to Minor Songs.png'
+                %}selected{% endif %}>Ratio of Major/Minor Songs</option>
+            <option value="Ratio of The Time Signatures of Songs" {% if
+                selected_image=='Ratio of the Time Signature of Songs.png' %}selected{% endif %}>Ratio of The Time Signatures of Songs</option>
+        </select>
+        <button type="submit" id="SubmitButton">Submit</button>
+    </form>
+
+    {% if selected_image %}
+    <img src="{{ url_for('static', filename=selected_image) }}" alt="{{ selected_image }}" id="PieImage">
+    {% endif %}
+
+
+
+
+    <h2>What attribute do you want to look at?</h2>
+    <div id="bar-graphs-container">
+
+    <div id="image-container">
+        <img id="image-display" src="static/Graphs/Popularity of Genres.png" alt="Default Image" width="800">
+    </div>
+
+
+<div id="button-containers">
+    <button onclick="changeImage('/static/Graphs/Popularity of Genres.png')">Popularity of Genres</button>
+    <button onclick="changeImage('/static/Graphs/Duration of Genres.png')">Duration of Genres</button>
+    <button onclick="changeImage('/static/Graphs/Tempo of Genres.png')">Tempo of Genres</button>
+    <button onclick="changeImage('/static/Graphs/Valence of Genres.png')">Valence of Genres</button>
+    <button onclick="changeImage('/static/Graphs/Liveness of Genres.png')">Liveness of Genres</button>
+    <button onclick="changeImage('/static/Graphs/Acousticness of Genres.png')">Acousticness of Genres</button>
+    <button onclick="changeImage('/static/Graphs/Speechiness of Genres.png')">Speechiness of Genres</button>
+    <button onclick="changeImage('/static/Graphs/Energy of Genres.png')">Energy of Genres</button>
+    <button onclick="changeImage('/static/Graphs/Danceability of Genres.png')">Danceability of Genres</button>
+</div>
+<button onclick="toggleGraph()" id="toggle-container-button">Switch to Top 10</button>
+
+</div>
+
+<form id="genre-form">
+    <label for="genre">Choose a genre:</label>
+    <select name="genre" id="genre">
+        {% for genre in genres %}
+            <option value="{{ genre[0] }}">{{ genre[0] }}</option>
+        {% endfor %}
+    </select>
+    <button type="submit">Get Random Songs</button>
+</form>
+
+<div id="songs-list"></div>
+
+
+    <h3>Similar Songs Based on Features:</h3>
+    <div id="selected-song-info"></div>
+    <div id="similar-songs-list"></div>
+
+    <script>
+        
+        let isTop10 = false;  // Track whether we are in "Top 10" mode
+
+
+        // Change the image source when a button is clicked
+        function changeImage(imagePath) {
+            const imageDisplay = document.getElementById('image-display');
+            imageDisplay.src = imagePath;  // Change the image source
+            currentGraph = imagePath;  // Update the current graph to the new one
+        }
+
+        function toggleGraph(){
+            isTop10 = !isTop10;
+
+            const button = document.getElementById('toggle-container-button');
+            if(isTop10){
+                button.textContent = "Switch to Regular Graph";
+                if(currentGraph === "/static/Graphs/Popularity of Genres.png"){
+                    document.getElementById('image-display').src = "/static/Graphs/Top Popularity of Genres.png";
+                }
+                else if(currentGraph === '/static/Graphs/Duration of Genres.png' ){
+                    document.getElementById('image-display').src = '/static/Graphs/Top Duration of Genres.png';
+                }
+                else if(currentGraph === '/static/Graphs/Tempo of Genres.png'){
+                    document.getElementById('image-display').src = '/static/Graphs/Top Tempo of Genres.png';
+                }
+                else if(currentGraph === '/static/Graphs/Valence of Genres.png'){
+                    document.getElementById('image-display').src = '/static/Graphs/Top Valence of Genres.png';
+                }
+                else if(currentGraph === '/static/Graphs/Liveness of Genres.png'){
+                    document.getElementById('image-display').src = '/static/Graphs/Top Liveness of Genres.png';
+                }
+                else if(currentGraph === '/static/Graphs/Acousticness of Genres.png'){
+                    document.getElementById('image-display').src = '/static/Graphs/Top Acousticness of Genres.png';
+                }
+                else if(currentGraph === '/static/Graphs/Speechiness of Genres.png'){
+                    document.getElementById('image-display').src = '/static/Graphs/Top Speechiness of Genres.png';
+                }
+                else if(currentGraph === '/static/Graphs/Energy of Genres.png'){
+                    document.getElementById('image-display').src = '/static/Graphs/Top Energy of Genres.png';
+                }
+                else if(currentGraph === '/static/Graphs/Danceability of Genres.png'){
+                    document.getElementById('image-display').src = '/static/Graphs/Top Danceability of Genres.png';
+                }
+            }
+            else{
+                button.textContent = "Switch to Top 10"; 
+                if(currentGraph === "/static/Graphs/Popularity of Genres.png"){
+                document.getElementById('image-display').src = "/static/Graphs/Popularity of Genres.png";
+                }
+                else if(currentGraph === '/static/Graphs/Duration of Genres.png' ){
+                    document.getElementById('image-display').src = '/static/Graphs/Duration of Genres.png';
+                }
+                else if(currentGraph === '/static/Graphs/Tempo of Genres.png'){
+                    document.getElementById('image-display').src = '/static/Graphs/Tempo of Genres.png';
+                }
+                else if(currentGraph === '/static/Graphs/Valence of Genres.png'){
+                    document.getElementById('image-display').src = '/static/Graphs/Valence of Genres.png';
+                }
+                else if(currentGraph === '/static/Graphs/Liveness of Genres.png'){
+                    document.getElementById('image-display').src = '/static/Graphs/Liveness of Genres.png';
+                }
+                else if(currentGraph === '/static/Graphs/Acousticness of Genres.png'){
+                    document.getElementById('image-display').src = '/static/Graphs/Acousticness of Genres.png';
+                }
+                else if(currentGraph === '/static/Graphs/Speechiness of Genres.png'){
+                    document.getElementById('image-display').src = '/static/Graphs/Speechiness of Genres.png';
+                }
+                else if(currentGraph === '/static/Graphs/Energy of Genres.png'){
+                    document.getElementById('image-display').src = '/static/Graphs/Energy of Genres.png';
+                }
+                else if(currentGraph === '/static/Graphs/Danceability of Genres.png'){
+                    document.getElementById('image-display').src = '/static/Graphs/Danceability of Genres.png';
+                }
+
+            }
+        }
+
+    // Handle the pie chart form submission (AJAX)
+    document.getElementById('pie-chart-form').addEventListener('submit', function(event) {
+    event.preventDefault();  // Prevent default form submission
+
+    const selectedPieChart = document.getElementById('dropdown').value;
+
+    // Send AJAX request for the selected pie chart
+    fetch('/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: 'dropdown=' + encodeURIComponent(selectedPieChart)
+    })
+    .then(response => response.text())
+    .then(data => {
+        // Update the pie chart image dynamically
+        const pieImage = document.getElementById('PieImage');
+        pieImage.src = data;
+    })
+    .catch(error => console.error('Error updating pie chart:', error));
+});
+
+
+// Handle the genre form submission (AJAX for random songs)
+    document.getElementById('genre-form').addEventListener('submit', function(event) {
+    event.preventDefault(); // Prevent the form from submitting normally
+
+    const genre = document.getElementById('genre').value;
+
+    // Send AJAX request to get random songs based on selected genre
+    fetch('/get_random_songs', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: 'genre=' + encodeURIComponent(genre)
+    })
+    .then(response => response.json())  // Convert the response into JSON
+    .then(songs => {
+        const songsList = document.getElementById('songs-list');
+        songsList.innerHTML = ''; // Clear previous song list
+
+        if (songs.length === 0) {
+            songsList.innerHTML = '<p>No songs found for this genre.</p>';
+        } else {
+            songs.forEach(song => {
+                const songElement = document.createElement('div');
+                songElement.classList.add('song');
+                src = "https://open.spotify.com/embed/track/" + song.track_id
+                songElement.innerHTML = `
+                    <div>
+                        <strong>Track Name:</strong> ${song.track_name} <br>
+                        <strong>Artist:</strong> ${song.artists} <br>
+                        <strong>Album:</strong> ${song.album_name} <br>
+                        <strong>Popularity:</strong> ${song.popularity} <br>
+                        <strong>Duration:</strong> ${song.duration_ms} ms <br>
+                        <iframe src=${src} width="300" height="80" frameBorder="0" allow="encrypted-media"></iframe>
+                        <button onclick="selectSong('${song.track_name}', '${song.artists}', '${song.album_name}')">Select</button>
+                    </div>
+                `;
+                songsList.appendChild(songElement);
+            });
+        }
+    })
+    .catch(error => console.error('Error fetching data:', error));
+    });
+
+// Function to handle when a user selects a song
+function selectSong(track_name,artists,album_name) {
+    // Display the selected song information
+    const selectedSongInfo = document.getElementById('selected-song-info');
+    selectedSongInfo.innerHTML = `
+        <h4>Selected Song:</h4>
+        <p><strong>Track Name:</strong> ${track_name}</p>
+        <p><strong>Artist:</strong> ${artists}</p>
+        <p><strong>Album:</strong> ${album_name}</p>
+    `;
+
+    // Send AJAX request to get similar songs based on the selected song
+    fetch('/get_similar_songs', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: 'song_name=' + encodeURIComponent(track_name)
+    })
+    .then(response => response.json())  // Convert the response into JSON
+    .then(data => {
+        const similarSongsList = document.getElementById('similar-songs-list');
+        similarSongsList.innerHTML = ''; // Clear previous similar songs list
+
+        if (data.similar_songs.length === 0) {
+            similarSongsList.innerHTML = '<p>No similar songs found.</p>';
+        } else {
+            data.similar_songs.forEach(song => {
+                const songElement = document.createElement('div');
+                songElement.classList.add('song');
+                src = "https://open.spotify.com/embed/track/" + song.track_id;
+                songElement.innerHTML = `
+                    <div>
+                        <strong>Track Name:</strong> ${song.track_name} <br>
+                        <iframe src=${src} width="300" height="80" frameBorder="0" allow="encrypted-media"></iframe>
+                    </div>
+                `;
+                similarSongsList.appendChild(songElement);
+            });
+        }
+    })
+    .catch(error => console.error('Error fetching similar songs:', error));
+}
+
+
+    </script>
+</body>
+
+</html>
