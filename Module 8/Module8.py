@@ -3,14 +3,18 @@ import mystatistics
 import logging
 import matplotlib
 import matplotlib.pyplot as plt
-import asyncio
 import time
-import multiprocessing
+from pyspark.sql import DataFrame
+from pyspark.sql.types import StructType, StructField, IntegerType, StringType, BooleanType, FloatType
+from pyspark.sql import SparkSession
+from pyspark.sql.utils import AnalysisException
+from pyspark.sql.functions import collect_list
+import os
+
 matplotlib.use('TkAgg', force=True)
 
 '''
-Module7: Implement asynchronous data fetching and multiprocessing to speed up data processing.
-ChatGPT was used to create multiprocessing code and pool usage.
+Module8: Use Apache PySpark in your program
 '''
 
 class FileManager:
@@ -35,6 +39,57 @@ class FileManager:
             print("The file is empty")
             raise pd.errors.EmptyDataError("The file is empty")
 
+    def read_csv_spark(self):
+        
+        if not os.path.isfile(self.name):
+            logging.error("The file could not be read as it does not exist")
+            raise FileNotFoundError("File is not found")
+        
+        schema = StructType([
+                StructField("", IntegerType(), True),
+                StructField("track_id", StringType(), True),
+                StructField("artists", StringType(), True),
+                StructField("album_name", StringType(), True),
+                StructField("track_name", StringType(), True),
+                StructField("popularity", IntegerType(), True),
+                StructField("duration_ms",IntegerType(), True),
+                StructField("explicit",BooleanType(), True), 
+                StructField("danceability",FloatType(), True),
+                StructField("energy",FloatType(), True),
+                StructField("key",IntegerType(), True),
+                StructField("loudness",FloatType(), True),
+                StructField("mode",IntegerType(), True),
+                StructField("speechiness",FloatType(), True),
+                StructField("acousticness",FloatType(), True),
+                StructField("instrumentalness",FloatType(), True),
+                StructField("liveness",FloatType(), True),
+                StructField("valence",FloatType(), True),
+                StructField("tempo",FloatType(), True),
+                StructField("time_signature",IntegerType(), True),
+                StructField("track_genre",StringType(), True),
+            ])
+        try:
+
+            spark = SparkSession.builder.config("spark.security.manager","false").appName("CSV Reader").getOrCreate()
+            df = spark.read.csv(self.name,header=True,quote='"',escape='\\',multiLine=True, encoding='UTF-8', schema=schema)
+            df = df.select("track_id", "artists", "album_name", "track_name", "popularity", "duration_ms",
+               "explicit", "danceability", "energy", "key", "loudness", "mode",
+               "speechiness", "acousticness", "instrumentalness", "liveness", "valence",
+               "tempo", "time_signature", "track_genre")
+
+            if df.isEmpty():
+                logging.error("The file is empty")
+                raise ValueError("The DataFrame is empty")
+        
+            logging.info("CSV chunk file was read from the path" )
+            return df
+        except AnalysisException as e:
+            logging.error("The file could not be read as it does not exists")
+            raise FileNotFoundError("File is not found")
+        except Exception as e:
+            logging.error("An unexpected error occured")
+            raise e
+    
     def read_csv(self):
         try:
             df=pd.read_csv(self.name) 
@@ -126,7 +181,7 @@ class Song:
     def __init__(self, name, ID, artist, album, popularity, duration, danceability, energy, key, loudness, mode, speechiness, acousticness, instrumentalness, liveness,valence, tempo, genre,explicit):
         variables = [name,ID,artist,album,genre,acousticness,instrumentalness,danceability,energy,liveness,loudness,speechiness,tempo,valence,key,mode,popularity,duration,explicit]
         for variable in variables:
-            if not isinstance(variable,(float,str,int)) and not isinstance(variable,bool):
+            if not isinstance(variable,(float,str,int)) and not isinstance(variable,bool) and variable is not None:
                 print("The variable  is not a float, string, or integer please format it as a one of these variables")
                 logging.error("One of the variables entered is not a float, string, or integer")  
                 raise ValueError("One of the variables entered is not a float, string, or integer")    
@@ -167,16 +222,18 @@ def creat_dict(file):
     Returns:
         Dict: Dictionary of the csv file
     """
-    if not isinstance(file,pd.DataFrame):
+    if not isinstance(file, DataFrame):
         logging.error("File is not a dataframe")
         raise ValueError("File is not a dataframe")
-    dict_top_songs = file.to_dict('records')
+    dict_top_songs = file.collect()  # Collect the data to the driver
+    dict_top_songs = [row.asDict() for row in dict_top_songs]  # Convert Row objects to dictionaries
+
     logging.info("The file containg the top songs was changed into a dictionary")
     return dict_top_songs
 
-def process_chunk(chunk):
-    dict_top_songs = creat_dict(chunk)
-    return organize_genres(dict_top_songs)
+# def process_chunk(chunk):
+#     dict_top_songs = creat_dict(chunk)
+#     return organize_genres(dict_top_songs)
 
 def organize_genres(song_dict_list):
     """
@@ -200,8 +257,10 @@ def organize_genres(song_dict_list):
             if genre_here == False:
                 genre_name = Genre(song['track_genre'])
                 genre_list.append(genre_name)
-        
+
             song_id = 'song' + str(count)
+
+
             song_id = Song(
                 song['track_name'], 
                 song['track_id'], 
@@ -252,40 +311,53 @@ def get_mean_median_mode(all_genres,value):
     try:
         for genre in all_genres:
             value_list = []
-            for songs in genre:
-                for song in songs:
-                    if value == 'popularity':
+            for song in genre:
+                if value == 'popularity':
+                    if song.popularity == None:
+                        print(genre.name)
+                    if song.popularity != "False":
                         value_list.append(song.popularity)
-                    elif value == 'duration':
+                elif value == 'duration':
+                    if song.duration != "False":
                         value_list.append(song.duration)
-                    elif value == 'danceability':
+                elif value == 'danceability':
+                    if song.danceability != "False":
                         value_list.append(song.danceability)
-                    elif value == 'energy':
+                elif value == 'energy':
+                    if song.energy != "False":
                         value_list.append(song.energy)
-                    elif value == 'loudness':
+                elif value == 'loudness':
+                    if song.loudness != "False":
                         value_list.append(song.loudness)
-                    elif value == 'mode':
+                elif value == 'mode':
+                    if song.mode != "False":
                         value_list.append(song.mode)
-                    elif value == 'speechiness':
+                elif value == 'speechiness':
+                    if song.speechiness != "False":
                         value_list.append(song.speechiness)
-                    elif value == 'acousticness':
+                elif value == 'acousticness':
+                    if song.acousticness != "False":
                         value_list.append(song.acousticness)
-                    elif value == 'instrumental':
+                elif value == 'instrumental':
+                    if song.instrumental != "False":
                         value_list.append(song.instrumental)
-                    elif value == 'liveness':
+                elif value == 'liveness':
+                    if song.liveness != "False":
                         value_list.append(song.liveness)
-                    elif value == 'valence':
+                elif value == 'valence':
+                    if song.valence != "False":
                         value_list.append(song.valence)
-                    elif value == 'tempo':
+                elif value == 'tempo':
+                    if song.tempo != "False":
                         value_list.append(song.tempo)
-                    else:
-                        raise ValueError("This value is not an value associated with Songs")
+                else:
+                    raise ValueError("This value is not an value associated with Songs")
             if value_list:
                 dance_mean =  mystatistics.mean(value_list)
                 dance_median =  mystatistics.median(value_list)
                 dance_mode =  mystatistics.mode(value_list)
                 data.append({ 
-                    "Genre": songs.name,
+                    "Genre": genre.name,
                     "Mean": dance_mean,
                     "Median": dance_median,
                     "Mode": dance_mode})
@@ -355,37 +427,45 @@ def filter_explicit(all_genres):
     except Exception:
         logging.error("There was an error while calculating ratio of explicit songs")
 
-def create_pie(df,name, variable, labels):
-    if not isinstance(df, pd.DataFrame):
+def create_pie(df,var_name,graph_name):
+    """_summary_
+
+    Args:
+        df (Spark DataFrame): A Spark DataFrame of all the songs
+        var_name (Str): A string containg the variable name for the songs
+        graph_name (Str): The name of the pie chart
+
+    Raises:
+        ValueError: checks if df is a Spark DataFrame
+        ValueError: checks if the graph name or variable name is a string
+    """
+    if not isinstance(df, DataFrame):
         logging.error("Df is not a dataframe")
         raise ValueError("Df is not a dataframe")
-    if not isinstance(name, str) and not isinstance(variable,str):
-        logging.error("Name or variable is not a string")
-        raise ValueError("Name or variable is not a string")
+    if not isinstance(graph_name, str) or not isinstance(var_name, str):
+        logging.error("The variable name or graph name is not a string")
+        raise ValueError("The variable name or graph name is not a string")
     
-    if(variable == 'explicit'):
-        slice1 = df[variable].sum()
-        slice2 = ~df[variable].sum()
+    if(var_name == 'explicit'):
+        slice1 = df.filter(df.explicit == 'True').count()
+        slice2 = df.filter(df.explicit == 'False').count()
         labels = ['Explicit','Non-explicit']
-    elif(variable == 'mode'):
-        slice1 = (df[variable]==1).sum() #Major 
-        slice2 = (df[variable]==0).sum() .count() #Minor
+    elif(var_name == 'mode'):
+        slice1 = df.filter(df.mode == '1').count() #Major 
+        slice2 = df.filter(df.mode == '0').count() #Minor
         labels = ['Major','Minor']
-    elif(variable == 'time_signature'):
+    elif(var_name == 'time_signature'):
         slice1 = df.filter(df.time_signature == '4').count()
         slice2 = df.filter(df.time_signature == '3').count()
         labels = ['Time signature 4','Time signature 3']
 
-    slice1 = df[variable].sum()
-    slice2 = df[variable].sum()
-
     colors = ['#42c966','#1f6131']
     plt.pie([slice1,slice2],labels=labels,autopct='%1.1f%%',colors=colors, textprops={'fontsize': 34})
     plt.axis()
-    plt.title(name, fontsize=40)
+    plt.title(graph_name, fontsize=40)
     figure = plt.gcf()
     figure.set_size_inches(32,18)
-    plt.savefig(name)
+    plt.savefig(graph_name)
     plt.close()
     logging.info("Pie chart was created")
     
@@ -400,19 +480,24 @@ def main():
     filename="Module6Log.log"
     )
 
-    start_time = time.time()
-
     filename="dataset.csv"
+    start_time = time.time()
     csv_manager = FileManager(filename)
-    chunks = csv_manager.read_csv_chunks()
-    with multiprocessing.Pool() as pool:
-        genre_list = pool.map(process_chunk,chunks)
-
+    df = csv_manager.read_csv_spark()
     end_time = time.time()
     elapsed_time = end_time - start_time
 
-    print("File organization time: " + str(elapsed_time))
+    print("File organization time with Spark: " + str(elapsed_time))
 
+    pie_list_names = ['Ratio of Explicit Songs','Ratio of Major to Minor Songs', 'Ratio of the Time Signature of Songs']
+    pie_list_values = ['explicit', 'mode', 'time_signature']
+
+    for i in range(len(pie_list_names)):
+        create_pie(df,pie_list_values[i], pie_list_names[i])
+
+
+    song_dict = creat_dict(df)
+    genre_list = organize_genres(song_dict)
     all_genres = AllGenres(genre_list)
     
 
@@ -422,14 +507,9 @@ def main():
 
     list(map(create_bar_graph,df_data_lists, data_list_names))
 
-    explicit_data = filter_explicit(all_genres)
-    create_pie(explicit_data,'Ratio of Explicit Songs')
+    
     logging.info("Program has been completed")
 
-    
-
-    
-        
 
 if __name__ == "__main__":
     main()
