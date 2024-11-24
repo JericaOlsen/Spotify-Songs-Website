@@ -1,0 +1,130 @@
+
+h1{
+    font-family: system-ui;
+    text-align: center;
+    background-color: #a0cea2;
+    padding: 2%;
+}
+
+p{
+    font-family: sustem-ui;
+}
+
+body{
+    background-color: #bfd9c0;
+}
+
+h2{
+    padding: 2%;
+    text-decoration: white;
+    text-align: center;
+}
+form{
+    border: 2px solid rgb(65, 142, 65);
+    border-radius: 4px;
+    background-color: lightgreen;
+    color: rgb(37, 103, 48);
+    padding: 2px;
+}
+
+#SubmitButton{
+    border-radius: 4px;
+    height: 20px;
+}
+
+label{
+    font-family: system-ui;
+}
+
+#dropdown{
+    font-family: system-ui;
+}
+
+#SubmitButton{
+    font-family: system-ui;
+    background-color: white;
+    border: none;
+    text-align: center;
+    text-decoration: none;
+}
+
+#PieImage{
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 5px;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+}
+
+#bar-graphs-container{
+    display: flex;
+    flex-direction: column-reverse;
+    justify-content: flex-end;
+    align-items: flex-start;
+    row-gap: 5px;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    padding: 2%;
+    background-color: white;
+}
+
+#bar-graphs-container img{
+    width: 100%;
+    max-width: 1200px;
+    height: auto;
+    transition: transform 0.3s ease-in-out;
+}
+
+#bar-graphs-container img:hover{
+    transform: scale(1.0);
+}
+
+#button-containers{
+    display: flex;
+    flex-direction: row;
+    gap: 4px;
+    flex-wrap: wrap;
+    justify-content: center;
+    background-color: rgb(219, 244, 223);
+    padding: 2%;
+}
+
+#button-containers button{
+    background: lightgreen;
+    font-family: system-ui;
+    border: 1px white;
+    padding: 5px;
+    width: 30%;
+    border-radius: 7px;
+}
+
+#toggle-container-button{
+    background: rgb(110, 235, 110);
+    font-family: system-ui;
+    border: 2px white;
+    padding: 5px;
+    margin: auto;
+    width: 200px;
+    height: 40px;
+    border-radius: 7px;
+    border: 10px bold #a0cea2;
+}
+
+#songs-list{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: stretch;
+}
+
+.song{
+    background-color: #a0cea2;
+    margin: .75%;
+    align-content: center;
+    line-height: 1.4;
+}
+
+.song #text{
+    margin: 1%;
+}
