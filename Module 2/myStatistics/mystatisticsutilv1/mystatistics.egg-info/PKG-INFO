@@ -1,0 +1,33 @@
+Metadata-Version: 2.1
+Name: mystatistics
+Version: 0.2.0
+Summary: A package that calculates mean median and mode
+Author: Jerica Olsen
+Author-email: whatisacirej@gmail.com
+License: LICENSE.txt
+Requires-Python: >=3.5,<4
+Description-Content-Type: text/markdown
+License-File: LICENSE.txt
+
+# My Statistics Module
+
+A module that can calculate mean, median, and mode of a dataset
+
+## Usage
+
+python
+import mystatistics
+
+#Calculates mean
+mystatistics.mean(dataset)
+
+#Calculates median
+mystatistics.median(dataset)
+
+#Calculates mode
+mystatistics.mode(dataset)
+
+
+## Description
+
+This package can calculate the mean median and mode given a list of numbers. It uses the the statistics module to accomplish this.
